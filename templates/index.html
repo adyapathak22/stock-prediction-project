@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Price Prediction Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="container">
+    <h1>Stock Price Prediction</h1>
+    <p class="subtitle">Linear Regression vs LSTM </p>
+
+<button onclick="showLR()">Show Linear Regression Graph</button>
+<button onclick="showLSTM()">Show LSTM Graph</button>
+
+
+    <h2 id="result">Click to visualize predictions</h2>
+
+    <canvas id="chart" width="600" height="300"></canvas>
+
+</div>
+
+<script>
+let chart;
+
+function drawLineGraph(actual, predicted, label1, label2, color1, color2) {
+    const ctx = document.getElementById("chart");
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: actual.map((_, i) => i),
+            datasets: [
+                {
+                    label: label1 + " (Actual)",
+                    data: actual,
+                    borderColor: color1,
+                    borderWidth: 3,          // thicker
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: label2 + " (Predicted)",
+                    data: predicted,
+                    borderColor: color2,
+                    borderWidth: 2,
+                    borderDash: [8, 6],      // 🔥 dashed line
+                    pointRadius: 0,
+                    tension: 0.4,
+                    backgroundColor: "rgba(0,0,0,0)",
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { size: 14 }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Time Index"
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Stock Price"
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+async function showLR() {
+    const res = await fetch("/predict/lr_series");
+    const data = await res.json();
+
+    drawLineGraph(
+        data.actual,
+        data.predicted,
+        "Actual Price",
+        "Predicted Price (LR)",
+        "#1f3c88",   // dark blue
+        "#df4a4a"    // red
+    );
+}
+
+async function showLSTM() {
+    const res = await fetch("/predict/lstm_series");
+    const data = await res.json();
+
+    drawLineGraph(
+        data.actual,
+        data.predicted,
+        "Actual Price",
+        "Predicted Price (LSTM)",
+        "#1f3c88",
+        "#c70039"    // red
+    );
+}
+</script>
+
+</body>
+</html>
